@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>化学元素符号速记挑战</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+
+        /* 全局隐藏滚动条 */
+        ::-webkit-scrollbar {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
+        }
+        
+        /* 兼容其他浏览器 */
+        * {
+            -ms-overflow-style: none !important;  /* IE and Edge */
+            scrollbar-width: none !important;    /* Firefox */
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0d1117 100%);
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                radial-gradient(circle at 20% 30%, rgba(56, 189, 248, 0.08) 0%, transparent 25%),
+                radial-gradient(circle at 80% 70%, rgba(16, 185, 129, 0.08) 0%, transparent 25%),
+                radial-gradient(circle at 40% 80%, rgba(217, 70, 239, 0.05) 0%, transparent 30%);
+            background-size: 100% 100%;
+            z-index: -2;
+        }
+
+        /* 侧边栏容器 - 仅作为按钮定位容器，无任何视觉样式 */
+        .sidebar-container {
+            position: fixed;
+            top: 50%;          
+            left: 0;           
+            transform: translateY(-50%); 
+            height: auto;
+            z-index: 100;      
+            display: flex;
+            /* 移除所有视觉样式 */
+            background: none !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        /* 📚按钮样式 - 独立且纯净 */
+        .sidebar-toggle {
+            width: 56px;       
+            height: 56px;
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: white;
+            border: none;
+            border-radius: 0 28px 28px 0; 
+            font-size: 22px;   
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 3px 15px rgba(139, 92, 246, 0.4);
+            transition: all 0.3s ease;
+            z-index: 101;
+            outline: none;
+            /* 确保按钮独立，无外溢 */
+            overflow: hidden;
+            position: relative;
+        }
+
+        .sidebar-toggle:hover {
+            background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(139, 92, 246, 0.5);
+        }
+
+        /* 侧边栏内容 - 完全隐藏，无任何视觉痕迹 */
+        .sidebar {
+            width: 380px;
+            height: 90vh;      
+            /* 彻底隐藏 */
+            background: transparent !important;
+            backdrop-filter: none !important;
+            border: none !important;
+            padding: 0 !important;
+            transform: translateX(-100%); 
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+            /* 确保内容完全不可见 */
+            opacity: 0;
+        }
+
+        /* 侧边栏展开时才显示内容样式 */
+        .sidebar.open {
+            transform: translateX(0); 
+            background: rgba(15, 23, 42, 0.98) !important;
+            backdrop-filter: blur(12px) !important;
+            border-right: 1px solid rgba(56, 189, 248, 0.2) !important;
+            padding: 20px !important;
+            box-shadow: 4px 0 25px rgba(0, 0, 0, 0.25) !important;
+            border-radius: 0 18px 18px 0 !important;
+            opacity: 1;
+        }
+
+        /* 侧边栏内部滚动容器 */
+        .sidebar-content {
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            padding-right: 10px;
+            /* 收起时完全隐藏 */
+            opacity: 0;
+        }
+
+        .sidebar.open .sidebar-content {
+            opacity: 1;
+        }
+
+        .sidebar h2 {
+            color: #38bdf8;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
+            font-size: 20px;
+        }
+
+        /* 元素参考表样式 */
+        .element-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(30, 41, 59, 0.8);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid rgba(56, 189, 248, 0.15);
+        }
+
+        .element-table th, .element-table td {
+            padding: 7px;
+            text-align: center;
+            border: 1px solid rgba(56, 189, 248, 0.08);
+        }
+
+        .element-table th {
+            background: rgba(139, 92, 246, 0.15);
+            color: #a78bfa;
+            font-size: 13px;
+        }
+
+        .element-table td {
+            color: #e2e8f0;
+            font-size: 12px;
+        }
+
+        .element-table .num-cell {
+            background: rgba(56, 189, 248, 0.08);
+            color: #38bdf8;
+            font-weight: bold;
+        }
+
+        .element-table .symbol-cell {
+            color: #fb923c;
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        .element-table .name-cell {
+            color: #10b981;
+        }
+
+        .element-table tr:nth-child(even) td {
+            background: rgba(30, 41, 59, 0.2);
+        }
+
+        /* 游戏容器样式 */
+        .game-container {
+            background: rgba(30, 41, 59, 0.88);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            width: 100%;
+            max-width: 620px;
+            box-shadow: 0 0 40px rgba(56, 189, 248, 0.15);
+            border: 1px solid rgba(56, 189, 248, 0.18);
+            position: relative;
+            z-index: 10;
+            margin-left: 15px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #ffffff;
+            margin-bottom: 28px;
+            font-size: 28px;
+            text-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+            letter-spacing: 0.5px;
+        }
+
+        .mode-select, .difficulty-select {
+            margin-bottom: 25px;
+        }
+
+        .mode-select h3, .difficulty-select h3 {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #cbd5e1;
+            font-size: 17px;
+            font-weight: normal;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        button {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            width: 220px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+            transition: left 0.5s;
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
+        .mode-btn {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            box-shadow: 0 3px 12px rgba(59, 130, 246, 0.25);
+        }
+
+        .mode-btn:hover, .mode-btn.active {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.35);
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+        }
+
+        .diff-btn {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: white;
+            box-shadow: 0 3px 12px rgba(139, 92, 246, 0.25);
+        }
+
+        .diff-btn:hover, .diff-btn.active {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(139, 92, 246, 0.35);
+            background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+        }
+
+        .game-area {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .player-info {
+            margin-bottom: 20px;
+            padding: 12px;
+            background: rgba(51, 65, 85, 0.4);
+            border-radius: 12px;
+            border: 1px solid rgba(56, 189, 248, 0.12);
+            text-align: center;
+            color: #e2e8f0;
+        }
+
+        .question {
+            font-size: 22px;
+            text-align: center;
+            margin: 25px 0;
+            padding: 20px;
+            background: rgba(51, 65, 85, 0.5);
+            border-radius: 12px;
+            color: #f1f5f9;
+            border: 1px solid rgba(56, 189, 248, 0.15);
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+            margin: 20px 0;
+        }
+
+        .option-btn {
+            background: rgba(56, 189, 248, 0.08);
+            color: #f0f9ff;
+            border: 2px solid rgba(56, 189, 248, 0.25);
+            padding: 16px;
+            font-size: 17px;
+            border-radius: 10px;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(56, 189, 248, 0.15);
+            border-color: rgba(56, 189, 248, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+        }
+
+        .feedback {
+            text-align: center;
+            font-size: 18px;
+            margin: 16px 0;
+            padding: 12px;
+            border-radius: 10px;
+            display: none;
+            font-weight: bold;
+            animation: pop 0.3s ease;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .feedback.correct {
+            background: rgba(16, 185, 129, 0.12);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.25);
+        }
+
+        .feedback.wrong {
+            background: rgba(239, 68, 68, 0.12);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.25);
+        }
+
+        .progress {
+            text-align: center;
+            color: #94a3b8;
+            margin-bottom: 14px;
+            font-size: 15px;
+        }
+
+        .result-area {
+            display: none;
+            text-align: center;
+            color: white;
+            padding: 18px 0;
+        }
+
+        .result-score {
+            font-size: 26px;
+            color: #ffffff;
+            margin: 22px 0;
+            line-height: 1.4;
+            text-shadow: 0 0 8px rgba(56, 189, 248, 0.25);
+        }
+
+        .restart-btn {
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            color: white;
+            margin-top: 22px;
+            box-shadow: 0 3px 12px rgba(249, 115, 22, 0.25);
+        }
+
+        .restart-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(249, 115, 22, 0.35);
+        }
+
+        .timer {
+            text-align: center;
+            font-size: 22px;
+            color: #fbbf24;
+            margin: 10px 0;
+            font-weight: bold;
+            text-shadow: 0 0 8px rgba(251, 191, 36, 0.3);
+        }
+
+        .disabled {
+            opacity: 0.6 !important;
+            cursor: not-allowed !important;
+            transform: none !important;
+        }
+
+        /* 响应式适配 */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 280px;
+            }
+            .element-table th, .element-table td {
+                padding: 5px;
+                font-size: 11px;
+            }
+            .sidebar-toggle {
+                width: 50px;
+                height: 50px;
+                font-size: 19px;
+            }
+            .game-container {
+                padding: 20px;
+                margin-left: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 侧边栏容器 - 仅包含按钮，无其他视觉元素 -->
+    <div class="sidebar-container" id="sidebarContainer">
+        <button class="sidebar-toggle" id="sidebarToggle">📚</button>
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-content">
+                <h2>🔬 化学元素符号参考表</h2>
+                <table class="element-table">
+                    <thead>
+                        <tr>
+                            <th>序号</th>
+                            <th>元素名称</th>
+                            <th>元素符号</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- 前10号元素 -->
+                        <tr><td class="num-cell">1</td><td class="name-cell">氢</td><td class="symbol-cell">H</td></tr>
+                        <tr><td class="num-cell">2</td><td class="name-cell">氦</td><td class="symbol-cell">He</td></tr>
+                        <tr><td class="num-cell">3</td><td class="name-cell">锂</td><td class="symbol-cell">Li</td></tr>
+                        <tr><td class="num-cell">4</td><td class="name-cell">铍</td><td class="symbol-cell">Be</td></tr>
+                        <tr><td class="num-cell">5</td><td class="name-cell">硼</td><td class="symbol-cell">B</td></tr>
+                        <tr><td class="num-cell">6</td><td class="name-cell">碳</td><td class="symbol-cell">C</td></tr>
+                        <tr><td class="num-cell">7</td><td class="name-cell">氮</td><td class="symbol-cell">N</td></tr>
+                        <tr><td class="num-cell">8</td><td class="name-cell">氧</td><td class="symbol-cell">O</td></tr>
+                        <tr><td class="num-cell">9</td><td class="name-cell">氟</td><td class="symbol-cell">F</td></tr>
+                        <tr><td class="num-cell">10</td><td class="name-cell">氖</td><td class="symbol-cell">Ne</td></tr>
+                        <!-- 11-20号元素 -->
+                        <tr><td class="num-cell">11</td><td class="name-cell">钠</td><td class="symbol-cell">Na</td></tr>
+                        <tr><td class="num-cell">12</td><td class="name-cell">镁</td><td class="symbol-cell">Mg</td></tr>
+                        <tr><td class="num-cell">13</td><td class="name-cell">铝</td><td class="symbol-cell">Al</td></tr>
+                        <tr><td class="num-cell">14</td><td class="name-cell">硅</td><td class="symbol-cell">Si</td></tr>
+                        <tr><td class="num-cell">15</td><td class="name-cell">磷</td><td class="symbol-cell">P</td></tr>
+                        <tr><td class="num-cell">16</td><td class="name-cell">硫</td><td class="symbol-cell">S</td></tr>
+                        <tr><td class="num-cell">17</td><td class="name-cell">氯</td><td class="symbol-cell">Cl</td></tr>
+                        <tr><td class="num-cell">18</td><td class="name-cell">氩</td><td class="symbol-cell">Ar</td></tr>
+                        <tr><td class="num-cell">19</td><td class="name-cell">钾</td><td class="symbol-cell">K</td></tr>
+                        <tr><td class="num-cell">20</td><td class="name-cell">钙</td><td class="symbol-cell">Ca</td></tr>
+                        <!-- 其他常用元素 -->
+                        <tr><td class="num-cell">-</td><td class="name-cell">锰</td><td class="symbol-cell">Mn</td></tr>
+                        <tr><td class="num-cell">-</td><td class="name-cell">铁</td><td class="symbol-cell">Fe</td></tr>
+                        <tr><td class="num-cell">-</td><td class="name-cell">铜</td><td class="symbol-cell">Cu</td></tr>
+                        <tr><td class="num-cell">-</td><td class="name-cell">银</td><td class="symbol-cell">Ag</td></tr>
+                        <tr><td class="num-cell">-</td><td class="name-cell">金</td><td class="symbol-cell">Au</td></tr>
+                        <tr><td class="num-cell">-</td><td class="name-cell">锌</td><td class="symbol-cell">Zn</td></tr>
+                        <tr><td class="num-cell">-</td><td class="name-cell">钡</td><td class="symbol-cell">Ba</td></tr>
+                        <tr><td class="num-cell">-</td><td class="name-cell">铂</td><td class="symbol-cell">Pt</td></tr>
+                        <tr><td class="num-cell">-</td><td class="name-cell">汞</td><td class="symbol-cell">Hg</td></tr>
+                        <tr><td class="num-cell">-</td><td class="name-cell">碘</td><td class="symbol-cell">I</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 游戏内容 -->
+    <div class="game-container">
+        <h1>🔬 化学元素符号速记挑战</h1>
+        
+        <div class="mode-select">
+            <h3>选择游戏模式</h3>
+            <div class="btn-group">
+                <button class="mode-btn active" data-mode="single">👤 单人挑战</button>
+                <button class="mode-btn disabled" data-mode="double" disabled>👥 双人挑战(开发中)</button>
+            </div>
+        </div>
+
+        <div class="difficulty-select">
+            <h3>选择难度 即可开始游戏</h3>
+            <div class="btn-group">
+                <button class="diff-btn" data-diff="bronze">🥉 青铜</button>
+                <button class="diff-btn" data-diff="gold">🥇 黄金</button>
+                <button class="diff-btn" data-diff="king">👑 王者</button>
+            </div>
+        </div>
+
+        <div class="game-area" id="gameArea">
+            <div class="player-info">
+                <div>当前得分: <span id="score1">0</span></div>
+            </div>
+
+            <div class="timer" id="timer">时间: 15s</div>
+            <div class="progress" id="progress">题目 1 / 3</div>
+            
+            <div class="question" id="question"></div>
+            <div class="options" id="options"></div>
+            
+            <div class="feedback" id="feedback"></div>
+        </div>
+
+        <div class="result-area" id="resultArea">
+            <h2>🎉 挑战结束！</h2>
+            <div class="result-score" id="resultScore"></div>
+            <button class="restart-btn" id="restartBtn">返回主页</button>
+        </div>
+    </div>
+
+    <script>
+        // 侧边栏控制逻辑
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarContainer = document.getElementById('sidebarContainer');
+
+        // 点击📚按钮展开/收起侧边栏
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+            sidebarToggle.textContent = sidebar.classList.contains('open') ? '✖' : '📚';
+        });
+
+        // 元素数据
+        const elements = {
+            bronze: [
+                { name: '氢', symbol: 'H' }, { name: '氦', symbol: 'He' }, { name: '锂', symbol: 'Li' },
+                { name: '铍', symbol: 'Be' }, { name: '硼', symbol: 'B' }, { name: '碳', symbol: 'C' },
+                { name: '氮', symbol: 'N' }, { name: '氧', symbol: 'O' }, { name: '氟', symbol: 'F' },
+                { name: '氖', symbol: 'Ne' }
+            ],
+            gold: [
+                { name: '氢', symbol: 'H' }, { name: '氦', symbol: 'He' }, { name: '锂', symbol: 'Li' },
+                { name: '铍', symbol: 'Be' }, { name: '硼', symbol: 'B' }, { name: '碳', symbol: 'C' },
+                { name: '氮', symbol: 'N' }, { name: '氧', symbol: 'O' }, { name: '氟', symbol: 'F' },
+                { name: '氖', symbol: 'Ne' }, { name: '钠', symbol: 'Na' }, { name: '镁', symbol: 'Mg' },
+                { name: '铝', symbol: 'Al' }, { name: '硅', symbol: 'Si' }, { name: '磷', symbol: 'P' },
+                { name: '硫', symbol: 'S' }, { name: '氯', symbol: 'Cl' }, { name: '氩', symbol: 'Ar' },
+                { name: '钾', symbol: 'K' }, { name: '钙', symbol: 'Ca' }
+            ],
+            king: [
+                { name: '氢', symbol: 'H' }, { name: '氦', symbol: 'He' }, { name: '锂', symbol: 'Li' },
+                { name: '铍', symbol: 'Be' }, { name: '硼', symbol: 'B' }, { name: '碳', symbol: 'C' },
+                { name: '氮', symbol: 'N' }, { name: '氧', symbol: 'O' }, { name: '氟', symbol: 'F' },
+                { name: '氖', symbol: 'Ne' }, { name: '钠', symbol: 'Na' }, { name: '镁', symbol: 'Mg' },
+                { name: '铝', symbol: 'Al' }, { name: '硅', symbol: 'Si' }, { name: '磷', symbol: 'P' },
+                { name: '硫', symbol: 'S' }, { name: '氯', symbol: 'Cl' }, { name: '氩', symbol: 'Ar' },
+                { name: '钾', symbol: 'K' }, { name: '钙', symbol: 'Ca' }, { name: '锰', symbol: 'Mn' },
+                { name: '铁', symbol: 'Fe' }, { name: '铜', symbol: 'Cu' }, { name: '银', symbol: 'Ag' },
+                { name: '金', symbol: 'Au' }, { name: '锌', symbol: 'Zn' }, { name: '钡', symbol: 'Ba' },
+                { name: '铂', symbol: 'Pt' }, { name: '汞', symbol: 'Hg' }, { name: '碘', symbol: 'I' }
+            ]
+        };
+
+        // 表扬/鼓励话术
+        const correctTexts = [
+            "做得好！", "优秀！", "超级棒！", "有进步！", "太棒啦！",
+            "完全正确！", "太厉害啦！", "继续保持！", "完美作答！"
+        ];
+
+        const wrongTexts = [
+            "再细心一点哦～", "稳住心态，下次更好！", "再加把劲！",
+            "多一点专注就更棒啦！", "没关系，下次一定行！",
+            "别灰心，继续加油！", "只差一点点啦！"
+        ];
+
+        // 游戏状态
+        let gameState = {
+            difficulty: 'bronze',
+            questions: [],
+            currentQ: 0,
+            score: 0,
+            answered: false,
+            timer: null,
+            timeLeft: 15
+        };
+
+        const qCount = { bronze: 3, gold: 5, king: 8 };
+
+        // DOM 元素获取
+        const diffBtns = document.querySelectorAll('.diff-btn');
+        const gameArea = document.getElementById('gameArea');
+        const resultArea = document.getElementById('resultArea');
+        const score1Span = document.getElementById('score1');
+        const progressSpan = document.getElementById('progress');
+        const questionDiv = document.getElementById('question');
+        const optionsDiv = document.getElementById('options');
+        const feedbackDiv = document.getElementById('feedback');
+        const timerDiv = document.getElementById('timer');
+        const resultScoreDiv = document.getElementById('resultScore');
+        const restartBtn = document.getElementById('restartBtn');
+
+        // 语音播报
+        function speak(text) {
+            if('speechSynthesis' in window) {
+                const u = new SpeechSynthesisUtterance(text);
+                u.lang = 'zh-CN';
+                u.rate = 1.0;
+                u.pitch = 1.0;
+                speechSynthesis.speak(u);
+            }
+        }
+
+        function randomCorrect() {
+            return correctTexts[Math.floor(Math.random() * correctTexts.length)];
+        }
+
+        function randomWrong() {
+            return wrongTexts[Math.floor(Math.random() * wrongTexts.length)];
+        }
+
+        // 难度选择+隐藏侧边栏
+        diffBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                diffBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                gameState.difficulty = btn.dataset.diff;
+                sidebarContainer.style.display = 'none'; // 进入游戏隐藏侧边栏
+                startGame();
+            });
+        });
+
+        // 生成题目
+        function generateQuestions(diff) {
+            const pool = elements[diff];
+            const count = qCount[diff];
+            const shuffled = [...pool].sort(() => Math.random() - 0.5);
+            const selected = shuffled.slice(0, count);
+            
+            return selected.map(el => {
+                const isNameToSymbol = Math.random() > 0.5;
+                const correct = isNameToSymbol ? el.symbol : el.name;
+                const wrongOptions = pool
+                    .filter(e => isNameToSymbol ? e.symbol !== el.symbol : e.name !== el.name)
+                    .sort(() => Math.random() - 0.5)
+                    .slice(0, 3)
+                    .map(e => isNameToSymbol ? e.symbol : e.name);
+                
+                const options = [...wrongOptions, correct].sort(() => Math.random() - 0.5);
+                
+                return {
+                    question: isNameToSymbol 
+                        ? `元素「${el.name}」的符号是？` 
+                        : `符号「${el.symbol}」对应的元素名称是？`,
+                    options: options,
+                    answer: correct
+                };
+            });
+        }
+
+        // 开始游戏
+        function startGame() {
+            gameState.questions = generateQuestions(gameState.difficulty);
+            gameState.currentQ = 0;
+            gameState.score = 0;
+            gameState.answered = false;
+            
+            score1Span.textContent = '0';
+            document.querySelector('.mode-select').style.display = 'none';
+            document.querySelector('.difficulty-select').style.display = 'none';
+            resultArea.style.display = 'none';
+            gameArea.style.display = 'block';
+            
+            speak('挑战开始，加油！');
+            nextQuestion();
+        }
+
+        // 下一题
+        function nextQuestion() {
+            if (gameState.currentQ >= gameState.questions.length) {
+                endGame();
+                return;
+            }
+            
+            gameState.answered = false;
+            feedbackDiv.style.display = 'none';
+            clearInterval(gameState.timer);
+            gameState.timeLeft = 15;
+            timerDiv.textContent = `时间: ${gameState.timeLeft}s`;
+            
+            const q = gameState.questions[gameState.currentQ];
+            progressSpan.textContent = `题目 ${gameState.currentQ + 1} / ${gameState.questions.length}`;
+            questionDiv.textContent = q.question;
+            
+            optionsDiv.innerHTML = '';
+            q.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = opt;
+                btn.addEventListener('click', () => checkAnswer(opt, q.answer, btn));
+                optionsDiv.appendChild(btn);
+            });
+            
+            startTimer();
+        }
+
+        // 计时器
+        function startTimer() {
+            gameState.timer = setInterval(() => {
+                gameState.timeLeft--;
+                timerDiv.textContent = `时间: ${gameState.timeLeft}s`;
+                
+                if (gameState.timeLeft <= 0) {
+                    clearInterval(gameState.timer);
+                    if (!gameState.answered) {
+                        checkAnswer(null, gameState.questions[gameState.currentQ].answer, null);
+                    }
+                }
+            }, 1000);
+        }
+
+        // 检查答案
+        function checkAnswer(selected, correct, btn) {
+            if (gameState.answered) return;
+            gameState.answered = true;
+            clearInterval(gameState.timer);
+            
+            const isCorrect = selected === correct;
+            feedbackDiv.style.display = 'block';
+
+            if(isCorrect) {
+                const praise = randomCorrect();
+                feedbackDiv.className = 'feedback correct';
+                feedbackDiv.textContent = '✅ ' + praise;
+                speak(praise);
+                gameState.score++;
+                score1Span.textContent = gameState.score;
+            } else {
+                const encourage = randomWrong();
+                feedbackDiv.className = 'feedback wrong';
+                feedbackDiv.textContent = `❌ ${encourage} 正确答案：${correct}`;
+                speak(encourage);
+            }
+            
+            document.querySelectorAll('.option-btn').forEach(b => b.disabled = true);
+            if (btn) {
+                btn.style.background = isCorrect ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)';
+                btn.style.borderColor = isCorrect ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)';
+            }
+            
+            setTimeout(() => {
+                gameState.currentQ++;
+                nextQuestion();
+            }, 1800);
+        }
+
+        // 结束游戏
+        function endGame() {
+            clearInterval(gameState.timer);
+            gameArea.style.display = 'none';
+            resultArea.style.display = 'block';
+            
+            const total = gameState.questions.length;
+            const score = gameState.score;
+            resultScoreDiv.textContent = `最终得分：${score} / ${total}`;
+            
+            if(score === total) {
+                speak('太棒了！满分通关！');
+            } else {
+                speak('挑战结束，继续加油，你会越来越棒！');
+            }
+        }
+
+        // 返回主页+显示侧边栏
+        restartBtn.addEventListener('click', () => {
+            sidebarContainer.style.display = 'flex'; // 显示侧边栏
+            sidebar.classList.remove('open'); // 收起侧边栏
+            sidebarToggle.textContent = '📚'; // 恢复📚图标
+            location.reload();
+        });
+    </script>
+</body>
+</html>
